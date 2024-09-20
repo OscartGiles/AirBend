@@ -1,0 +1,10 @@
+[package]
+name = "airbend-ingest"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.40.0", features = ["full"] }
+databend-driver = "0.20.1"
+databend-driver-core = "0.20.1"
+indoc = "2"

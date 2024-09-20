@@ -1,0 +1,160 @@
+[0m13:53:09.176158 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100ab910>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100bf750>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100bfcd0>]}
+
+
+============================== 13:53:09.194928 | 2952b709-8ccd-4218-bbfb-2980d9688f6b ==============================
+[0m13:53:09.194928 [info ] [MainThread]: Running with dbt=1.8.6
+[0m13:53:09.195591 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'version_check': 'True', 'debug': 'False', 'log_path': 'logs', 'profiles_dir': '/Users/oscar/.dbt', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'empty': 'None', 'log_format': 'default', 'static_parser': 'True', 'invocation_command': 'dbt debug', 'introspect': 'True', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'send_anonymous_usage_stats': 'True'}
+[0m13:53:09.251430 [info ] [MainThread]: dbt version: 1.8.6
+[0m13:53:09.251830 [info ] [MainThread]: python version: 3.11.10
+[0m13:53:09.252158 [info ] [MainThread]: python path: /Users/oscar/Documents/repos/AirBend/.venv/bin/python3
+[0m13:53:09.252450 [info ] [MainThread]: os info: macOS-14.4-x86_64-i386-64bit
+[0m13:53:09.356038 [debug] [MainThread]: Traceback (most recent call last):
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/factory.py", line 68, in load_plugin
+    mod: Any = import_module("." + name, "dbt.adapters")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/.local/share/uv/python/cpython-3.11.10-macos-x86_64-none/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/databend/__init__.py", line 1, in <module>
+    from dbt.adapters.databend.connections import DatabendConnectionManager  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/databend/connections.py", line 17, in <module>
+    from databend_sqlalchemy import connector
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/databend_sqlalchemy/__init__.py", line 4, in <module>
+    from databend_sqlalchemy.entry_points import validate_entrypoints  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/databend_sqlalchemy/entry_points.py", line 4, in <module>
+    import pkg_resources
+ModuleNotFoundError: No module named 'pkg_resources'
+
+[0m13:53:09.356614 [error] [MainThread]: Encountered an error:
+No module named 'pkg_resources'
+[0m13:53:09.358380 [error] [MainThread]: Traceback (most recent call last):
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/requires.py", line 138, in wrapper
+    result, success = func(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/requires.py", line 101, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/main.py", line 406, in debug
+    results = task.run()
+              ^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/task/debug.py", line 120, in run
+    load_profile_status: SubtaskStatus = self._load_profile()
+                                         ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/task/debug.py", line 211, in _load_profile
+    profile: Profile = Profile.render(
+                       ^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/config/profile.py", line 403, in render
+    return cls.from_raw_profiles(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/config/profile.py", line 369, in from_raw_profiles
+    return cls.from_raw_profile_info(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/config/profile.py", line 325, in from_raw_profile_info
+    credentials: Credentials = cls._credentials_from_profile(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/config/profile.py", line 149, in _credentials_from_profile
+    cls = load_plugin(typename)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/factory.py", line 239, in load_plugin
+    return FACTORY.load_plugin(name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/factory.py", line 68, in load_plugin
+    mod: Any = import_module("." + name, "dbt.adapters")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/.local/share/uv/python/cpython-3.11.10-macos-x86_64-none/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/databend/__init__.py", line 1, in <module>
+    from dbt.adapters.databend.connections import DatabendConnectionManager  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/adapters/databend/connections.py", line 17, in <module>
+    from databend_sqlalchemy import connector
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/databend_sqlalchemy/__init__.py", line 4, in <module>
+    from databend_sqlalchemy.entry_points import validate_entrypoints  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/databend_sqlalchemy/entry_points.py", line 4, in <module>
+    import pkg_resources
+ModuleNotFoundError: No module named 'pkg_resources'
+
+[0m13:53:09.359243 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_wall_clock_time": 0.24341777, "process_user_time": 2.392607, "process_kernel_time": 0.653364, "process_mem_max_rss": "122052608", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m13:53:09.359766 [debug] [MainThread]: Command `dbt debug` failed at 13:53:09.359657 after 0.24 seconds
+[0m13:53:09.360129 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10bdbded0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1100be9d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10bf31fd0>]}
+[0m13:53:09.360454 [debug] [MainThread]: Flushing usage events
+[0m13:54:11.025626 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a3d2410>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a413910>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a4416d0>]}
+
+
+============================== 13:54:11.031449 | 5fc1ff49-8416-47c6-b0a2-931ae50955e3 ==============================
+[0m13:54:11.031449 [info ] [MainThread]: Running with dbt=1.8.6
+[0m13:54:11.032076 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'write_json': 'True', 'partial_parse': 'True', 'cache_selected_only': 'False', 'profiles_dir': '/Users/oscar/.dbt', 'debug': 'False', 'version_check': 'True', 'log_path': 'logs', 'warn_error': 'None', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'empty': 'None', 'quiet': 'False', 'no_print': 'None', 'log_format': 'default', 'invocation_command': 'dbt init airbend-pipeline', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'target_path': 'None', 'introspect': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m13:54:13.094527 [error] [MainThread]: Encountered an error:
+
+[0m13:54:13.097397 [error] [MainThread]: Traceback (most recent call last):
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/requires.py", line 138, in wrapper
+    result, success = func(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/requires.py", line 101, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/cli/main.py", line 470, in init
+    results = task.run()
+              ^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/task/init.py", line 325, in run
+    project_name = self.get_valid_project_name()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/task/init.py", line 279, in get_valid_project_name
+    name = click.prompt("Enter a name for your project (letters, digits, underscore)")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/click/termui.py", line 164, in prompt
+    value = prompt_func(prompt)
+            ^^^^^^^^^^^^^^^^^^^
+  File "/Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/click/termui.py", line 147, in prompt_func
+    raise Abort() from None
+click.exceptions.Abort
+
+[0m13:54:13.098550 [debug] [MainThread]: Resource report: {"command_name": "init", "command_wall_clock_time": 2.1348648, "process_user_time": 1.215364, "process_kernel_time": 0.155178, "process_mem_max_rss": "95928320", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m13:54:13.099393 [debug] [MainThread]: Command `dbt init` failed at 13:54:13.099236 after 2.14 seconds
+[0m13:54:13.099913 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1062ab2d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a3f3b50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a3c3510>]}
+[0m13:54:13.100548 [debug] [MainThread]: Flushing usage events
+[0m13:54:19.493426 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110a129d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110a40e50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110a418d0>]}
+
+
+============================== 13:54:19.509272 | a349349f-3208-4dba-aab1-723b1c77db65 ==============================
+[0m13:54:19.509272 [info ] [MainThread]: Running with dbt=1.8.6
+[0m13:54:19.510522 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'debug': 'False', 'profiles_dir': '/Users/oscar/.dbt', 'log_path': 'logs', 'fail_fast': 'False', 'version_check': 'True', 'use_colors': 'True', 'use_experimental_parser': 'False', 'empty': 'None', 'quiet': 'False', 'no_print': 'None', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'static_parser': 'True', 'invocation_command': 'dbt init airbend_pipeline', 'log_format': 'default', 'target_path': 'None', 'introspect': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m13:54:19.523583 [debug] [MainThread]: Starter project path: /Users/oscar/Documents/repos/AirBend/.venv/lib/python3.11/site-packages/dbt/include/starter_project
+[0m13:54:19.532088 [info ] [MainThread]: 
+Your new dbt project "airbend_pipeline" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m13:54:19.532587 [info ] [MainThread]: Setting up your profile.
+[0m13:54:22.530562 [info ] [MainThread]: Profile airbend_pipeline written to /Users/oscar/.dbt/profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m13:54:22.531472 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 3.0990024, "process_user_time": 1.362518, "process_kernel_time": 0.209413, "process_mem_max_rss": "104681472", "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m13:54:22.532302 [debug] [MainThread]: Command `dbt init` succeeded at 13:54:22.532093 after 3.10 seconds
+[0m13:54:22.532800 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c8ab2d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11103b090>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110a40ad0>]}
+[0m13:54:22.533279 [debug] [MainThread]: Flushing usage events
