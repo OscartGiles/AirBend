@@ -52,51 +52,16 @@ fn meta_table() -> Table {
 #[tokio::main]
 async fn main() {
     let client = create_client();
-
     let meta = get_meta(&client).await.unwrap();
 
     let table = meta_table();
-
     let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
     let client = Client::new(dsn);
     let conn = client.get_conn().await.unwrap();
     table.create(&conn).await;
 
-    fn nullable(raw_date: &str) -> String {
-        match raw_date {
-            "" => "Null".to_string(),
-            _ => format!("'{}'", raw_date),
-        }
-    }
-
-    for site in meta.sites.site {
-        let query = &format!(
-            "INSERT INTO {} VALUES (
-            '{}',
-            '{}',
-            '{}',
-            '{}',
-             {},
-            '{}',
-            '{}',
-            '{}',
-            '{}');",
-            table.name,
-            site.site_code,
-            site.site_name,
-            site.site_type,
-            site.date_opened,
-            nullable(&site.date_closed),
-            site.latitude,
-            site.longitude,
-            site.data_owner,
-            site.site_link
-        );
-
-        println!("{}", query);
-
-        conn.exec(&query).await.unwrap();
-    }
+    // This is not type checked. Up to caller to ensure the values are the correct type (DB will error).
+    table.insert_all(&conn, meta.sites.site).await;
 }
 
 #[cfg(test)]

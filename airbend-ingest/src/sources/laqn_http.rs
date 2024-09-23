@@ -1,11 +1,21 @@
 use reqwest::Client;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use url::Url;
+
+use crate::tables::InsertRow;
 
 const META_URL: &str =
     "https://api.erg.ic.ac.uk/AirQuality/Information/MonitoringSites/GroupName=London/Json";
 
 const READING_URL: &str = "https://api.erg.ic.ac.uk/AirQuality/Data/Site/";
+
+fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: Option<String> = Option::deserialize(deserializer)?;
+    Ok(s.filter(|s| !s.is_empty())) // Convert empty strings to None
+}
 
 #[derive(Deserialize, Debug)]
 pub struct Site {
@@ -19,14 +29,14 @@ pub struct Site {
     pub site_name: String,
     #[serde(alias = "@SiteType")]
     pub site_type: String,
-    #[serde(alias = "@DateClosed")]
-    pub date_closed: String,
-    #[serde(alias = "@DateOpened")]
-    pub date_opened: String,
-    #[serde(alias = "@Latitude")]
-    pub latitude: String,
-    #[serde(alias = "@Longitude")]
-    pub longitude: String,
+    #[serde(alias = "@DateClosed", deserialize_with = "empty_string_as_none")]
+    pub date_closed: Option<String>,
+    #[serde(alias = "@DateOpened", deserialize_with = "empty_string_as_none")]
+    pub date_opened: Option<String>,
+    #[serde(alias = "@Latitude", deserialize_with = "empty_string_as_none")]
+    pub latitude: Option<String>,
+    #[serde(alias = "@Longitude", deserialize_with = "empty_string_as_none")]
+    pub longitude: Option<String>,
     #[serde(alias = "@LatitudeWGS84")]
     pub latitude_wgs84: String,
     #[serde(alias = "@LongitudeWGS84")]
@@ -41,6 +51,23 @@ pub struct Site {
     pub display_manager: String,
     #[serde(alias = "@SiteLink")]
     pub site_link: String,
+}
+
+impl From<Site> for InsertRow {
+    fn from(value: Site) -> Self {
+        (
+            value.site_code,
+            value.site_name,
+            value.site_type,
+            value.date_opened,
+            value.date_closed,
+            value.latitude,
+            value.longitude,
+            value.data_owner,
+            value.site_link,
+        )
+            .into()
+    }
 }
 
 #[derive(Deserialize, Debug)]
