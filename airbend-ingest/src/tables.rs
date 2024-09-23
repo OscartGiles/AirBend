@@ -291,11 +291,97 @@ impl From<u32> for InsertValue {
     }
 }
 
+impl From<jiff::Timestamp> for InsertValue {
+    fn from(value: jiff::Timestamp) -> Self {
+        InsertValue(Value::Timestamp(value.as_microsecond()))
+    }
+}
+
+impl From<f64> for InsertValue {
+    fn from(value: f64) -> Self {
+        InsertValue(Value::Number(NumberValue::Float64(value)))
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use std::marker::PhantomData;
+
+    use databend_driver::{Client, Connection, DataType, Field, NumberValue, Value};
+
+    use crate::tables::InsertValue;
 
     #[tokio::test]
     async fn ideal_api() -> anyhow::Result<()> {
+        trait Table {
+            fn name() -> &'static str;
+            fn schema() -> Vec<Field>;
+            fn to_row(self) -> Vec<InsertValue>;
+        }
+
+        async fn create<T: Table>(conn: &Box<dyn Connection>) -> anyhow::Result<()> {
+            let fields: Vec<_> = T::schema()
+                .iter()
+                .map(|field| format!("{} {}", field.name, field.data_type))
+                .collect();
+
+            let fields = fields.join(", ");
+
+            let query = format!("CREATE TABLE IF NOT EXISTS {} ({});", T::name(), fields);
+            conn.exec(&query).await?;
+            Ok(())
+        }
+
+        struct Query(String);
+
+        impl Query {
+            async fn execute(&self, conn: &Box<dyn Connection>) -> anyhow::Result<()> {
+                println!("{}", self.0);
+                Ok(())
+            }
+        }
+
+        struct Insert<T> {
+            data_type: PhantomData<T>,
+            values: Option<Vec<T>>,
+        }
+
+        impl<T: Table> Insert<T> {
+            fn values(self, values: Vec<T>) -> Query {
+                use std::io::Write;
+                let mut buff = vec![];
+                let mut row_iter = values.into_iter().peekable();
+                while let Some(r) = row_iter.next() {
+                    write!(&mut buff, "(").unwrap();
+                    let mut row = r.to_row().into_iter().peekable();
+                    while let Some(element) = row.next() {
+                        write!(buff, "{}", element).unwrap();
+                        if row.peek().is_some() {
+                            write!(buff, ", ").unwrap();
+                        }
+                    }
+                    write!(buff, ")").unwrap();
+                    if row_iter.peek().is_some() {
+                        write!(buff, ",").unwrap();
+                    }
+                }
+
+                Query(format!(
+                    "INSERT INTO {} VALUES {}",
+                    T::name(),
+                    String::from_utf8(buff).expect("Must be valid utf-8")
+                ))
+            }
+        }
+
+        fn insert<T: Table>() -> Insert<T> {
+            Insert {
+                data_type: PhantomData,
+                values: None,
+            }
+        }
+
+        // User implementation starts here (we should have a macro for this)
         struct RawSensorReading {
             site_code: String,
             measurement_date: jiff::Timestamp,
@@ -303,65 +389,67 @@ mod tests {
             value: f64,
         }
 
-        trait Table {
-            fn name() -> &'static str;
-            fn schema() -> Vec<databend_driver::Field>;
-        }
-
         impl Table for RawSensorReading {
             fn name() -> &'static str {
                 "raw_sensor_reading"
             }
 
-            fn schema() -> Vec<databend_driver::Field> {
-                vec![]
+            fn schema() -> Vec<Field> {
+                vec![
+                    Field {
+                        name: "site_code".to_string(),
+                        data_type: DataType::String,
+                    },
+                    Field {
+                        name: "measurement_date".to_string(),
+                        data_type: DataType::Timestamp,
+                    },
+                    Field {
+                        name: "species".to_string(),
+                        data_type: DataType::String,
+                    },
+                    Field {
+                        name: "value".to_string(),
+                        data_type: DataType::Number(
+                            databend_driver_core::schema::NumberDataType::Float64,
+                        ),
+                    },
+                ]
+            }
+
+            fn to_row(self) -> Vec<InsertValue> {
+                vec![
+                    self.site_code.into(),
+                    self.measurement_date.into(),
+                    self.species.into(),
+                    self.value.into(), // InsertValue(Value::Number(NumberValue::Float64(self.value))),
+                ]
             }
         }
 
-        async fn create<T: Table>() -> anyhow::Result<()> {
-            // let fields: Vec<_> = self
-            //     .schema
-            //     .iter()
-            //     .map(|field| format!("{} {}", field.name, field.data_type))
-            //     .collect();
+        let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
+        let db_client = Client::new(dsn);
+        let conn = db_client.get_conn().await.unwrap();
 
-            // let fields = fields.join(", ");
+        create::<RawSensorReading>(&conn).await?;
 
-            // format!("CREATE TABLE IF NOT EXISTS {} ({});", self.name, fields)
-            Ok(())
-        }
-        async fn insert<T: Table>(value: T) -> anyhow::Result<()> {
-            Ok(())
-        }
-        async fn insert_many<T: Table>(value: &Vec<T>) -> anyhow::Result<()> {
-            Ok(())
-        }
-
-        create::<RawSensorReading>().await?;
-
-        insert(RawSensorReading {
-            site_code: "CE3".to_string(),
-            measurement_date: "2024-07-11T01:14:00Z".parse().unwrap(),
-            species: "NO2".into(),
-            value: 23.2,
-        })
-        .await?;
-
-        insert_many(&vec![
-            RawSensorReading {
-                site_code: "CE3".to_string(),
-                measurement_date: "2024-07-11T01:14:00Z".parse().unwrap(),
-                species: "NO2".into(),
-                value: 23.2,
-            },
-            RawSensorReading {
-                site_code: "CE3".to_string(),
-                measurement_date: "2024-07-11T01:12:00Z".parse().unwrap(),
-                species: "NO2".into(),
-                value: 23.4,
-            },
-        ])
-        .await?;
+        insert()
+            .values(vec![
+                RawSensorReading {
+                    site_code: "CE3".to_string(),
+                    measurement_date: "2024-07-11T01:14:00Z".parse().unwrap(),
+                    species: "NO2".into(),
+                    value: 23.2,
+                },
+                RawSensorReading {
+                    site_code: "CE3".to_string(),
+                    measurement_date: "2024-07-12T01:14:00Z".parse().unwrap(),
+                    species: "NO2".into(),
+                    value: 50.0,
+                },
+            ])
+            .execute(&conn)
+            .await?;
 
         Ok(())
     }
