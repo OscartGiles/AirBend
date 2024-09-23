@@ -1,10 +1,33 @@
 use databend_driver::{Client, DataType, Field};
-use sources::laqn_http::{create_client, get_meta};
+use sources::laqn_http::{create_client, get_meta, get_raw_laqn_readings};
 use tables::Table;
 
 mod sources;
 mod tables;
 
+fn air_sensor_table() -> Table {
+    Table::new(
+        "raw_sensor_reading",
+        vec![
+            Field {
+                name: "site_code".into(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "measurement_date".into(),
+                data_type: DataType::Timestamp,
+            },
+            Field {
+                name: "species".into(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "value".into(),
+                data_type: DataType::Number(databend_driver_core::schema::NumberDataType::Float64),
+            },
+        ],
+    )
+}
 fn meta_table() -> Table {
     Table::new(
         "raw_laqn_meta",
@@ -52,16 +75,37 @@ fn meta_table() -> Table {
 #[tokio::main]
 async fn main() {
     let client = create_client();
+
+    let meta_table = meta_table();
+    let air_sensor_table = air_sensor_table();
+    let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
+    let db_client = Client::new(dsn);
+    let conn = db_client.get_conn().await.unwrap();
+    meta_table.create(&conn).await;
+    air_sensor_table.create(&conn).await;
+
     let meta = get_meta(&client).await.unwrap();
 
-    let table = meta_table();
-    let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
-    let client = Client::new(dsn);
-    let conn = client.get_conn().await.unwrap();
-    table.create(&conn).await;
+    meta_table.insert_all(&conn, meta.sites.site.clone()).await;
 
-    // This is not type checked. Up to caller to ensure the values are the correct type (DB will error).
-    table.insert_all(&conn, meta.sites.site).await;
+    for sensor_site in &meta.sites.site {
+        let values =
+            get_raw_laqn_readings(&client, &sensor_site.site_code, "2024-09-01", "2024-09-02")
+                .await
+                .unwrap();
+
+        let mut insert_rows = vec![];
+        for value in values.air_quality_data.readings {
+            insert_rows.push((
+                &sensor_site.site_code,
+                value.measurement_date,
+                value.species_code,
+                value.value,
+            ));
+        }
+
+        air_sensor_table.insert_all(&conn, insert_rows).await;
+    }
 }
 
 #[cfg(test)]

@@ -235,8 +235,6 @@ impl Table {
 
     pub async fn insert_all(&self, conn: &Box<dyn Connection>, values: impl Into<InsertMultiRow>) {
         let insert_query = format!("INSERT INTO {} VALUES {}", self.name, values.into());
-
-        println!("{}", insert_query);
         conn.exec(&insert_query).await.unwrap();
     }
 }
@@ -277,6 +275,12 @@ impl From<String> for InsertValue {
 
 impl From<&str> for InsertValue {
     fn from(value: &str) -> Self {
+        InsertValue(Value::String(value.into()))
+    }
+}
+
+impl From<&String> for InsertValue {
+    fn from(value: &String) -> Self {
         InsertValue(Value::String(value.into()))
     }
 }

@@ -17,7 +17,7 @@ where
     Ok(s.filter(|s| !s.is_empty())) // Convert empty strings to None
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Site {
     #[serde(alias = "@LocalAuthorityCode")]
     pub local_authority_code: String,
@@ -70,7 +70,7 @@ impl From<Site> for InsertRow {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Sites {
     #[serde(alias = "Site")]
     pub site: Vec<Site>,
@@ -93,17 +93,17 @@ pub struct AirQuality {
     #[serde(alias = "@SiteCode")]
     site_code: String,
     #[serde(alias = "Data")]
-    data: Vec<SensorReading>,
+    pub readings: Vec<SensorReading>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct SensorReading {
     #[serde(alias = "@MeasurementDateGMT")]
-    measurement_date: String,
-    #[serde(alias = "@SpeciesCode")]
-    species_code: String,
-    #[serde(alias = "@Value")]
-    value: String,
+    pub measurement_date: String,
+    #[serde(alias = "@SpeciesCode", deserialize_with = "empty_string_as_none")]
+    pub species_code: Option<String>,
+    #[serde(alias = "@Value", deserialize_with = "empty_string_as_none")]
+    pub value: Option<String>,
 }
 
 pub fn create_client() -> Client {
