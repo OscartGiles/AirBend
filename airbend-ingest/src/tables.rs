@@ -294,32 +294,75 @@ impl From<u32> for InsertValue {
 #[cfg(test)]
 mod tests {
 
-    use databend_driver::{Client, DataType, Field};
-    use databend_driver_core::schema::NumberDataType;
-
-    use crate::tables::Table;
-
     #[tokio::test]
-    async fn insert_statement() {
-        let t = Table::new(
-            "test",
-            vec![
-                Field {
-                    name: "name".to_string(),
-                    data_type: DataType::String,
-                },
-                Field {
-                    name: "age".to_string(),
-                    data_type: DataType::Number(NumberDataType::UInt8),
-                },
-            ],
-        );
+    async fn ideal_api() -> anyhow::Result<()> {
+        struct RawSensorReading {
+            site_code: String,
+            measurement_date: jiff::Timestamp,
+            species: String,
+            value: f64,
+        }
 
-        let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
-        let client = Client::new(dsn);
-        let conn = client.get_conn().await.unwrap();
+        trait Table {
+            fn name() -> &'static str;
+            fn schema() -> Vec<databend_driver::Field>;
+        }
 
-        t.create(&conn).await;
-        t.insert(&conn, ("Oscar".to_string(), 34, 23)).await;
+        impl Table for RawSensorReading {
+            fn name() -> &'static str {
+                "raw_sensor_reading"
+            }
+
+            fn schema() -> Vec<databend_driver::Field> {
+                vec![]
+            }
+        }
+
+        async fn create<T: Table>() -> anyhow::Result<()> {
+            // let fields: Vec<_> = self
+            //     .schema
+            //     .iter()
+            //     .map(|field| format!("{} {}", field.name, field.data_type))
+            //     .collect();
+
+            // let fields = fields.join(", ");
+
+            // format!("CREATE TABLE IF NOT EXISTS {} ({});", self.name, fields)
+            Ok(())
+        }
+        async fn insert<T: Table>(value: T) -> anyhow::Result<()> {
+            Ok(())
+        }
+        async fn insert_many<T: Table>(value: &Vec<T>) -> anyhow::Result<()> {
+            Ok(())
+        }
+
+        create::<RawSensorReading>().await?;
+
+        insert(RawSensorReading {
+            site_code: "CE3".to_string(),
+            measurement_date: "2024-07-11T01:14:00Z".parse().unwrap(),
+            species: "NO2".into(),
+            value: 23.2,
+        })
+        .await?;
+
+        insert_many(&vec![
+            RawSensorReading {
+                site_code: "CE3".to_string(),
+                measurement_date: "2024-07-11T01:14:00Z".parse().unwrap(),
+                species: "NO2".into(),
+                value: 23.2,
+            },
+            RawSensorReading {
+                site_code: "CE3".to_string(),
+                measurement_date: "2024-07-11T01:12:00Z".parse().unwrap(),
+                species: "NO2".into(),
+                value: 23.4,
+            },
+        ])
+        .await?;
+
+        Ok(())
     }
 }
