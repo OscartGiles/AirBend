@@ -17,7 +17,7 @@ where
 }
 
 #[derive(Deserialize, Debug, Clone, AirbendTable)]
-#[airbend_table(table_name = "raw_meta_data")]
+#[airbend_table(table_name = "raw_metadata")]
 pub struct Site {
     #[serde(alias = "@LocalAuthorityCode")]
     pub local_authority_code: String,
@@ -33,16 +33,16 @@ pub struct Site {
     #[airbend_col(dtype = "VARCHAR")]
     pub site_type: String,
     #[serde(alias = "@DateClosed", deserialize_with = "empty_string_as_none")]
-    #[airbend_col(dtype = "NULLABLE(TIMESTAMP)")]
+    #[airbend_col(dtype = "TIMESTAMP")]
     pub date_closed: Option<String>,
     #[serde(alias = "@DateOpened", deserialize_with = "empty_string_as_none")]
     #[airbend_col(dtype = "TIMESTAMP")]
     pub date_opened: Option<String>,
     #[serde(alias = "@Latitude", deserialize_with = "empty_string_as_none")]
-    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub latitude: Option<String>,
     #[serde(alias = "@Longitude", deserialize_with = "empty_string_as_none")]
-    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub longitude: Option<String>,
     #[serde(alias = "@LatitudeWGS84")]
     pub latitude_wgs84: String,
@@ -105,9 +105,9 @@ pub struct FlatSensorReading {
     pub site_code: String,
     #[airbend_col(dtype = "VARCHAR")]
     pub measurement_date: String,
-    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub species_code: Option<String>,
-    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub value: Option<String>,
 }
 

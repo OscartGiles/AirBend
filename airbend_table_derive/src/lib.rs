@@ -48,14 +48,13 @@ pub fn derive_airbend_table(input: proc_macro::TokenStream) -> proc_macro::Token
                         } else if meta.path.is_ident("dtype") {
                             col_dtype = Some(meta.value().unwrap().parse().unwrap());
                             Ok(())
-                        }  else {
+                        } else {
                             Err(meta.error("unsupported table property"))
                         }
                     })
                     .unwrap();
             }
         }
-
 
         let resolved_col_name = if let Some(col_name_lit_str) = col_name {
             col_name_lit_str.value()
@@ -66,14 +65,15 @@ pub fn derive_airbend_table(input: proc_macro::TokenStream) -> proc_macro::Token
         if ignore_field {
             (None, None)
         } else {
-            (Some(quote!(airbend_table::Field {
-                name: #resolved_col_name.to_string(),
-                data_type: (&airbend_table::parse_type_desc(#col_dtype).expect("Could not parse dtype. Ensure type is valid")).try_into().expect("Could not create a valid DataType")
-            })),
-
-            Some(quote!(
-                self.#ident.into()
-            ))
+            (
+                Some(quote!(airbend_table::Field {
+                    name: #resolved_col_name,
+                    data_type: #col_dtype,
+                    nullable: true
+                })),
+                Some(quote!(
+                    self.#ident.into()
+                )),
             )
         }
     });
