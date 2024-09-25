@@ -1,9 +1,7 @@
-use airbend_table::{DataType, Field, InsertValue, NumberDataType};
+use airbend_table::AirbendTable;
 use reqwest::Client;
 use serde::{Deserialize, Deserializer};
 use url::Url;
-
-use airbend_table::Table;
 
 const META_URL: &str =
     "https://api.erg.ic.ac.uk/AirQuality/Information/MonitoringSites/GroupName=London/Json";
@@ -18,25 +16,33 @@ where
     Ok(s.filter(|s| !s.is_empty())) // Convert empty strings to None
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, AirbendTable)]
+#[airbend_table(table_name = "raw_meta_data")]
 pub struct Site {
     #[serde(alias = "@LocalAuthorityCode")]
     pub local_authority_code: String,
     #[serde(alias = "@LocalAuthorityName")]
     pub local_authority_name: String,
     #[serde(alias = "@SiteCode")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub site_code: String,
     #[serde(alias = "@SiteName")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub site_name: String,
     #[serde(alias = "@SiteType")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub site_type: String,
     #[serde(alias = "@DateClosed", deserialize_with = "empty_string_as_none")]
+    #[airbend_col(dtype = "NULLABLE(TIMESTAMP)")]
     pub date_closed: Option<String>,
     #[serde(alias = "@DateOpened", deserialize_with = "empty_string_as_none")]
+    #[airbend_col(dtype = "TIMESTAMP")]
     pub date_opened: Option<String>,
     #[serde(alias = "@Latitude", deserialize_with = "empty_string_as_none")]
+    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
     pub latitude: Option<String>,
     #[serde(alias = "@Longitude", deserialize_with = "empty_string_as_none")]
+    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
     pub longitude: Option<String>,
     #[serde(alias = "@LatitudeWGS84")]
     pub latitude_wgs84: String,
@@ -47,72 +53,13 @@ pub struct Site {
     #[serde(alias = "@DisplayOffsetY")]
     pub display_offset_y: String,
     #[serde(alias = "@DataOwner")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub data_owner: String,
     #[serde(alias = "@DataManager")]
     pub display_manager: String,
     #[serde(alias = "@SiteLink")]
+    #[airbend_col(dtype = "VARCHAR")]
     pub site_link: String,
-}
-
-impl Table for Site {
-    fn name() -> &'static str {
-        "raw_laqn_metadata"
-    }
-
-    fn schema() -> Vec<Field> {
-        vec![
-            Field {
-                name: "site_code".to_string(),
-                data_type: DataType::String,
-            },
-            Field {
-                name: "site_name".to_string(),
-                data_type: DataType::String, // Number(NumberDataType::UInt8),
-            },
-            Field {
-                name: "site_type".to_string(),
-                data_type: DataType::String,
-            },
-            Field {
-                name: "date_opened".to_string(),
-                data_type: DataType::Date,
-            },
-            Field {
-                name: "date_closed".to_string(),
-                data_type: DataType::Nullable(Box::new(DataType::Date)),
-            },
-            Field {
-                name: "latitude".to_string(),
-                data_type: DataType::Number(NumberDataType::Float64),
-            },
-            Field {
-                name: "longitude".to_string(),
-                data_type: DataType::Number(NumberDataType::Float64),
-            },
-            Field {
-                name: "data_owner".to_string(),
-                data_type: DataType::String,
-            },
-            Field {
-                name: "site_link".to_string(),
-                data_type: DataType::String,
-            },
-        ]
-    }
-
-    fn to_row(self) -> Vec<InsertValue> {
-        vec![
-            self.site_code.into(),
-            self.site_name.into(),
-            self.site_type.into(),
-            self.date_opened.into(),
-            self.date_closed.into(),
-            self.latitude.into(),
-            self.longitude.into(),
-            self.data_owner.into(),
-            self.site_link.into(),
-        ]
-    }
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -151,47 +98,17 @@ pub struct SensorReading {
     pub value: Option<String>,
 }
 
+#[derive(AirbendTable)]
+#[airbend_table(table_name = "raw_sensor_reading")]
 pub struct FlatSensorReading {
+    #[airbend_col(dtype = "VARCHAR")]
     pub site_code: String,
+    #[airbend_col(dtype = "VARCHAR")]
     pub measurement_date: String,
+    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
     pub species_code: Option<String>,
+    #[airbend_col(dtype = "NULLABLE(VARCHAR)")]
     pub value: Option<String>,
-}
-
-impl Table for FlatSensorReading {
-    fn name() -> &'static str {
-        "raw_sensor_reading"
-    }
-
-    fn schema() -> Vec<Field> {
-        vec![
-            Field {
-                name: "site_code".into(),
-                data_type: DataType::String,
-            },
-            Field {
-                name: "measurement_date".into(),
-                data_type: DataType::Timestamp,
-            },
-            Field {
-                name: "species_code".into(),
-                data_type: DataType::String,
-            },
-            Field {
-                name: "value".into(),
-                data_type: DataType::Number(NumberDataType::Float64),
-            },
-        ]
-    }
-
-    fn to_row(self) -> Vec<InsertValue> {
-        vec![
-            self.site_code.into(),
-            self.measurement_date.into(),
-            self.species_code.into(),
-            self.value.into(),
-        ]
-    }
 }
 
 pub fn create_client() -> Client {

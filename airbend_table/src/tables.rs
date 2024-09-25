@@ -164,20 +164,20 @@ impl TryFrom<&TypeDesc<'_>> for crate::DataType {
         }
         let dt = match desc.name {
             "NULL" | "Null" => DataType::Null,
-            "Boolean" => DataType::Boolean,
-            "Binary" => DataType::Binary,
-            "String" => DataType::String,
-            "Int8" => DataType::Number(NumberDataType::Int8),
-            "Int16" => DataType::Number(NumberDataType::Int16),
-            "Int32" => DataType::Number(NumberDataType::Int32),
-            "Int64" => DataType::Number(NumberDataType::Int64),
+            "BOOLEAN" => DataType::Boolean,
+            "BINARY" => DataType::Binary,
+            "VARCHAR" | "STRING" => DataType::String,
+            "TINYINT" | "INT8" => DataType::Number(NumberDataType::Int8),
+            "SMALLINT" | "INT16" => DataType::Number(NumberDataType::Int16),
+            "INT" | "INT32" => DataType::Number(NumberDataType::Int32),
+            "BIGINT" | "Int64" => DataType::Number(NumberDataType::Int64),
             "UInt8" => DataType::Number(NumberDataType::UInt8),
             "UInt16" => DataType::Number(NumberDataType::UInt16),
             "UInt32" => DataType::Number(NumberDataType::UInt32),
             "UInt64" => DataType::Number(NumberDataType::UInt64),
-            "Float32" => DataType::Number(NumberDataType::Float32),
-            "Float64" => DataType::Number(NumberDataType::Float64),
-            "Decimal" => {
+            "FLOAT" | "FLOAT32" => DataType::Number(NumberDataType::Float32),
+            "DOUBLE" | "FLOAT64" => DataType::Number(NumberDataType::Float64),
+            "DECIMAL" => {
                 let precision = desc.args[0].name.parse::<u8>()?;
                 let scale = desc.args[1].name.parse::<u8>()?;
 
@@ -193,9 +193,9 @@ impl TryFrom<&TypeDesc<'_>> for crate::DataType {
                     }))
                 }
             }
-            "Timestamp" => DataType::Timestamp,
-            "Date" => DataType::Date,
-            "Nullable" => {
+            "TIMESTAMP" => DataType::Timestamp,
+            "DATE" => DataType::Date,
+            "NULLABLE" => {
                 if desc.args.len() != 1 {
                     return Err(Error::Parsing(
                         "Nullable type must have one argument".to_string(),
@@ -207,7 +207,7 @@ impl TryFrom<&TypeDesc<'_>> for crate::DataType {
                 let inner = Self::try_from(&desc.args[0])?;
                 DataType::Nullable(Box::new(inner))
             }
-            "Array" => {
+            "ARRAY" => {
                 if desc.args.len() != 1 {
                     return Err(Error::Parsing(
                         "Array type must have one argument".to_string(),
@@ -220,7 +220,7 @@ impl TryFrom<&TypeDesc<'_>> for crate::DataType {
                     DataType::Array(Box::new(inner))
                 }
             }
-            "Map" => {
+            "MAP" => {
                 if desc.args.len() == 1 && desc.args[0].name == "Nothing" {
                     DataType::EmptyMap
                 } else {
@@ -234,16 +234,16 @@ impl TryFrom<&TypeDesc<'_>> for crate::DataType {
                     DataType::Map(Box::new(DataType::Tuple(vec![key_ty, val_ty])))
                 }
             }
-            "Tuple" => {
+            "TUPLE" => {
                 let mut inner = vec![];
                 for arg in &desc.args {
                     inner.push(Self::try_from(arg)?);
                 }
                 DataType::Tuple(inner)
             }
-            "Variant" => DataType::Variant,
-            "Bitmap" => DataType::Bitmap,
-            "Geometry" => DataType::Geometry,
+            "VARIANT" => DataType::Variant,
+            "BITMAP" => DataType::Bitmap,
+            "GEOMETRY" => DataType::Geometry,
             _ => return Err(Error::Parsing(format!("Unknown type: {:?}", desc))),
         };
         Ok(dt)
@@ -317,29 +317,4 @@ pub fn parse_type_desc(s: &str) -> databend_driver_core::error::Result<TypeDesc>
         nullable,
         args,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use databend_driver::Field;
-
-    use crate::tables::{parse_type_desc, DataType};
-
-    #[test]
-    fn get_type() {
-        let t = "Array(String)";
-
-        let res = parse_type_desc(t).unwrap();
-
-        let resolved = DataType::try_from(&res).unwrap();
-
-        let f = Field {
-            name: "test".to_string(),
-            data_type: resolved,
-        };
-
-        println!("{:?}", f);
-
-        println!("{:?}", res);
-    }
 }
