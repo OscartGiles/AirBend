@@ -5,11 +5,11 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.40.0", features = ["full"] }
-databend-driver = "0.20.1"
-databend-driver-core = "0.20.1"
 indoc = "2"
 reqwest = "0.12.7"
 serde = { version = "1.0.210", features = ["derive"] }
 url = "2.5.2"
-jiff = "0.1.13"
 anyhow = "1.0.89"
+airbend_table = { path = "../airbend_table" }
+
+# airbend_table_derive = { path = "../airbend_table_derive" }

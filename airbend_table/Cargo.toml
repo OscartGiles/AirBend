@@ -1,0 +1,11 @@
+[package]
+name = "airbend_table"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+databend-driver = "0.20.1"
+databend-driver-core = "0.20.1"
+jiff = "0.1.13"
+anyhow = "1.0.89"
+airbend_table_derive = { path = "../airbend_table_derive" }

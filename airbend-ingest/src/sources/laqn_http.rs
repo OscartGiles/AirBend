@@ -1,8 +1,9 @@
+use airbend_table::{DataType, Field, InsertValue, NumberDataType};
 use reqwest::Client;
 use serde::{Deserialize, Deserializer};
 use url::Url;
 
-use crate::tables::InsertRow;
+use airbend_table::Table;
 
 const META_URL: &str =
     "https://api.erg.ic.ac.uk/AirQuality/Information/MonitoringSites/GroupName=London/Json";
@@ -53,20 +54,64 @@ pub struct Site {
     pub site_link: String,
 }
 
-impl From<Site> for InsertRow {
-    fn from(value: Site) -> Self {
-        (
-            value.site_code,
-            value.site_name,
-            value.site_type,
-            value.date_opened,
-            value.date_closed,
-            value.latitude,
-            value.longitude,
-            value.data_owner,
-            value.site_link,
-        )
-            .into()
+impl Table for Site {
+    fn name() -> &'static str {
+        "raw_laqn_metadata"
+    }
+
+    fn schema() -> Vec<Field> {
+        vec![
+            Field {
+                name: "site_code".to_string(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "site_name".to_string(),
+                data_type: DataType::String, // Number(NumberDataType::UInt8),
+            },
+            Field {
+                name: "site_type".to_string(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "date_opened".to_string(),
+                data_type: DataType::Date,
+            },
+            Field {
+                name: "date_closed".to_string(),
+                data_type: DataType::Nullable(Box::new(DataType::Date)),
+            },
+            Field {
+                name: "latitude".to_string(),
+                data_type: DataType::Number(NumberDataType::Float64),
+            },
+            Field {
+                name: "longitude".to_string(),
+                data_type: DataType::Number(NumberDataType::Float64),
+            },
+            Field {
+                name: "data_owner".to_string(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "site_link".to_string(),
+                data_type: DataType::String,
+            },
+        ]
+    }
+
+    fn to_row(self) -> Vec<InsertValue> {
+        vec![
+            self.site_code.into(),
+            self.site_name.into(),
+            self.site_type.into(),
+            self.date_opened.into(),
+            self.date_closed.into(),
+            self.latitude.into(),
+            self.longitude.into(),
+            self.data_owner.into(),
+            self.site_link.into(),
+        ]
     }
 }
 
@@ -106,6 +151,49 @@ pub struct SensorReading {
     pub value: Option<String>,
 }
 
+pub struct FlatSensorReading {
+    pub site_code: String,
+    pub measurement_date: String,
+    pub species_code: Option<String>,
+    pub value: Option<String>,
+}
+
+impl Table for FlatSensorReading {
+    fn name() -> &'static str {
+        "raw_sensor_reading"
+    }
+
+    fn schema() -> Vec<Field> {
+        vec![
+            Field {
+                name: "site_code".into(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "measurement_date".into(),
+                data_type: DataType::Timestamp,
+            },
+            Field {
+                name: "species_code".into(),
+                data_type: DataType::String,
+            },
+            Field {
+                name: "value".into(),
+                data_type: DataType::Number(NumberDataType::Float64),
+            },
+        ]
+    }
+
+    fn to_row(self) -> Vec<InsertValue> {
+        vec![
+            self.site_code.into(),
+            self.measurement_date.into(),
+            self.species_code.into(),
+            self.value.into(),
+        ]
+    }
+}
+
 pub fn create_client() -> Client {
     Client::builder().build().expect("Could not build client")
 }
@@ -135,21 +223,4 @@ pub async fn get_raw_laqn_readings(
 
     let resp = client.get(url).send().await?;
     resp.json().await
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::sources::laqn_http::{create_client, get_meta, get_raw_laqn_readings};
-
-    #[tokio::test]
-    async fn laqn_meta() {
-        let client = create_client();
-
-        let meta = get_meta(&client).await;
-        println!("{:?}", meta);
-
-        let values = get_raw_laqn_readings(&client, "CW3", "2024-09-01", "2024-09-02").await;
-
-        println!("{:?}", values)
-    }
 }
