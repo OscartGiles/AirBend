@@ -2,12 +2,13 @@ mod client_middleware;
 mod db;
 mod sources;
 
-use airbend_table::{create, insert, Client}; // Our own crate for DB inserts
+use airbend_table::{create, insert, Client, Connection}; // Our own crate for DB inserts
 use db::laqn::{FlatSensorReading, SiteMeta};
 use jiff::{Timestamp, Unit};
 
 use sources::laqn_http::{create_client, get_meta, get_raw_laqn_readings, Site};
-
+use tokio::task::JoinSet;
+use tracing::error;
 /// Maps the HTTP response to the database representation.
 /// This is the same struct but has an addition scrape_time column.
 fn site_to_site_meta(value: Site, time: jiff::Timestamp) -> SiteMeta {
@@ -56,12 +57,20 @@ async fn main() -> anyhow::Result<()> {
     // Insert the values into the database
     insert().values(db_meta).execute(&conn).await?;
 
-    // Make an http request for every metadata site and insert into the database.
-    for sensor_site in &meta.sites.site {
-        println!("Get values for {}", sensor_site.site_name);
-        // Only insert if we got successful values. Just drop failed endpoints for now.
+    // This is a collection that keeps track of async tasks. Each task is a call to an
+    // API endpoint + an insert into the database.
+    let mut request_joinset: JoinSet<anyhow::Result<String>> = JoinSet::new();
+
+    async fn get_sensor_data_and_insert(
+        client: reqwest_middleware::ClientWithMiddleware,
+        conn: Box<dyn Connection>,
+        sensor_site: Site,
+        start_date: String,
+        end_date: String,
+        scrape_time: Timestamp,
+    ) -> anyhow::Result<String> {
         if let Ok(values) =
-            get_raw_laqn_readings(&client, &sensor_site.site_code, "2024-09-01", "2024-09-02").await
+            get_raw_laqn_readings(&client, &sensor_site.site_code, &start_date, &end_date).await
         {
             let mut insert_rows = vec![];
             for value in values.air_quality_data.readings {
@@ -75,6 +84,38 @@ async fn main() -> anyhow::Result<()> {
             }
 
             insert().values(insert_rows).execute(&conn).await?;
+        }
+        Ok(sensor_site.site_code)
+    }
+
+    // Start all request and insert tasks.
+    for sensor_site in meta.sites.site.into_iter() {
+        request_joinset.spawn(get_sensor_data_and_insert(
+            client.clone(),
+            conn.clone(),
+            sensor_site,
+            "2024-09-01".into(),
+            "2024-09-02".into(),
+            scrape_time,
+        ));
+    }
+
+    // Wait for tasks to finish
+    while let Some(task_result) = request_joinset.join_next().await {
+        match task_result {
+            Ok(r) => match r {
+                Ok(r) => {
+                    println!("Processed sensor data for site_code: {}", r);
+                }
+                Err(e) => {
+                    error!("Request failed {}", e);
+                    continue;
+                }
+            },
+            Err(join_error) => {
+                error!("Failed to join task: {}", join_error);
+                continue;
+            }
         }
     }
 

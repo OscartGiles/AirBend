@@ -1,6 +1,6 @@
 mod tables;
 
-pub use databend_driver::{Client, DataType};
+pub use databend_driver::{Client, Connection, DataType};
 pub use databend_driver_core::schema::NumberDataType;
 
 pub use tables::{create, insert, Field, InsertValue, Table};
