@@ -153,15 +153,15 @@ pub async fn get_raw_laqn_readings(
     end_date: &str,
 ) -> reqwest::Result<AirQualityData> {
     let url = Url::parse(READING_URL)
-        .unwrap()
+        .expect("Base URL was not valid")
         .join(&format!("SiteCode={}/", site_code))
-        .unwrap()
+        .expect("site_code could not be interpolated into url")
         .join(&format!("StartDate={}/", start_date))
-        .unwrap()
+        .expect("start_date could not be interpolated into url")
         .join(&format!("EndDate={}/", end_date))
-        .unwrap()
+        .expect("end_date could not be interpolated into url")
         .join("Json")
-        .unwrap();
+        .expect("Could not create a valid url");
 
     let resp = client.get(url).send().await?;
     resp.json().await

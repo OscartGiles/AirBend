@@ -56,23 +56,23 @@ async fn main() -> anyhow::Result<()> {
 
     // Make an http request for every metadata site and insert into the database.
     for sensor_site in &meta.sites.site {
-        let values =
-            get_raw_laqn_readings(&client, &sensor_site.site_code, "2024-09-01", "2024-09-02")
-                .await
-                .unwrap();
+        // Only insert if we got successful values. Just drop failed endpoints for now.
+        if let Ok(values) =
+            get_raw_laqn_readings(&client, &sensor_site.site_code, "2024-09-01", "2024-09-02").await
+        {
+            let mut insert_rows = vec![];
+            for value in values.air_quality_data.readings {
+                insert_rows.push(FlatSensorReading {
+                    site_code: sensor_site.site_code.clone(),
+                    measurement_date: value.measurement_date,
+                    species_code: value.species_code,
+                    value: value.value,
+                    scrape_time,
+                });
+            }
 
-        let mut insert_rows = vec![];
-        for value in values.air_quality_data.readings {
-            insert_rows.push(FlatSensorReading {
-                site_code: sensor_site.site_code.clone(),
-                measurement_date: value.measurement_date,
-                species_code: value.species_code,
-                value: value.value,
-                scrape_time,
-            });
+            insert().values(insert_rows).execute(&conn).await?;
         }
-
-        insert().values(insert_rows).execute(&conn).await?;
     }
 
     Ok(())
