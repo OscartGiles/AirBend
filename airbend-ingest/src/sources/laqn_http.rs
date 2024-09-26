@@ -1,7 +1,16 @@
+use std::time::Duration;
+
 use airbend_table::AirbendTable;
-use reqwest::Client;
+use reqwest::{redirect, Client};
+use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
+use reqwest_tracing::TracingMiddleware;
 use serde::{Deserialize, Deserializer};
 use url::Url;
+
+use crate::client_middleware::{MaxConcurrentMiddleware, RetryTooManyRequestsMiddleware};
+
+static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
 const META_URL: &str =
     "https://api.erg.ic.ac.uk/AirQuality/Information/MonitoringSites/GroupName=London/Json";
@@ -136,22 +145,37 @@ pub struct SiteMeta {
     pub site_link: String,
 }
 
-pub fn create_client() -> Client {
-    Client::builder().build().expect("Could not build client")
+pub fn create_client(max_concurrent_requests: usize) -> anyhow::Result<ClientWithMiddleware> {
+    let retry_policy = ExponentialBackoff::builder()
+        .jitter(reqwest_retry::Jitter::Bounded)
+        .build_with_max_retries(5);
+
+    Ok(ClientBuilder::new(
+        reqwest::Client::builder()
+            .user_agent(APP_USER_AGENT)
+            .redirect(redirect::Policy::limited(10))
+            .build()?,
+    )
+    .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+    .with(RetryTooManyRequestsMiddleware::new(Duration::from_secs(5)))
+    .with(MaxConcurrentMiddleware::new(max_concurrent_requests))
+    .with(TracingMiddleware::default())
+    .build())
 }
 
-pub async fn get_meta(client: &Client) -> reqwest::Result<RawMetaData> {
+pub async fn get_meta(client: &ClientWithMiddleware) -> reqwest_middleware::Result<RawMetaData> {
     let resp = client.get(META_URL).send().await?;
-
-    resp.json().await
+    resp.json()
+        .await
+        .map_err(|e| reqwest_middleware::Error::Reqwest(e))
 }
 
 pub async fn get_raw_laqn_readings(
-    client: &Client,
+    client: &ClientWithMiddleware,
     site_code: &str,
     start_date: &str,
     end_date: &str,
-) -> reqwest::Result<AirQualityData> {
+) -> reqwest_middleware::Result<AirQualityData> {
     let url = Url::parse(READING_URL)
         .expect("Base URL was not valid")
         .join(&format!("SiteCode={}/", site_code))
@@ -164,5 +188,7 @@ pub async fn get_raw_laqn_readings(
         .expect("Could not create a valid url");
 
     let resp = client.get(url).send().await?;
-    resp.json().await
+    resp.json()
+        .await
+        .map_err(|e| reqwest_middleware::Error::Reqwest(e))
 }

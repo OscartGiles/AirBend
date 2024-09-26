@@ -12,5 +12,13 @@ url = "2.5.2"
 anyhow = "1.0.89"
 airbend_table = { path = "../airbend_table" }
 jiff = "0.1.13"
+http = "1.1.0"
+reqwest-middleware = "0.3.3"
+reqwest-retry = "0.6.0"
+reqwest-tracing = "0.5.2"
+tracing = "0.1.40"
+tracing-opentelemetry = "0.26.0"
+tracing-subscriber = "0.3.18"
+async-trait = "0.1.83"
 
 # airbend_table_derive = { path = "../airbend_table_derive" }

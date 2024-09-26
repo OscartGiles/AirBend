@@ -1,3 +1,4 @@
+mod client_middleware;
 mod db;
 mod sources;
 
@@ -26,7 +27,8 @@ fn site_to_site_meta(value: Site, time: jiff::Timestamp) -> SiteMeta {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let client = create_client();
+    let max_concurrent_connections = 5;
+    let client = create_client(max_concurrent_connections)?;
 
     let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
     let db_client = Client::new(dsn);
@@ -56,6 +58,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Make an http request for every metadata site and insert into the database.
     for sensor_site in &meta.sites.site {
+        println!("Get values for {}", sensor_site.site_name);
         // Only insert if we got successful values. Just drop failed endpoints for now.
         if let Ok(values) =
             get_raw_laqn_readings(&client, &sensor_site.site_code, "2024-09-01", "2024-09-02").await
