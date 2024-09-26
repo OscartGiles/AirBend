@@ -112,3 +112,28 @@ uv run dbt debug
 ```
 
 Everything should pass.
+
+
+
+## Components
+
+### Airbend-ingest
+
+A CLI tool to get data from the LAQN and insert into databend.
+
+Assuming you've installed [Rust](https://www.rust-lang.org/tools/install) and have started a databend database you can start ingesting data:
+
+First install the CLI:
+```sh
+cargo install --path airbend-ingest
+```
+
+Get some help:
+```sh
+airbend-ingest --help
+```
+
+and finally get data between a date range and insert into databend:
+```sh
+airbend-ingest --start-date 2024-09-01 --end-date 2024-10-02 --max-concurrent-connections 10
+```
