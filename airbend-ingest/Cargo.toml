@@ -11,5 +11,6 @@ serde = { version = "1.0.210", features = ["derive"] }
 url = "2.5.2"
 anyhow = "1.0.89"
 airbend_table = { path = "../airbend_table" }
+jiff = "0.1.13"
 
 # airbend_table_derive = { path = "../airbend_table_derive" }
