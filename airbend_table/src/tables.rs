@@ -1,5 +1,5 @@
-use databend_driver::{Connection, DataType, DecimalSize, Error, NumberValue, Value};
-use databend_driver_core::schema::{DecimalDataType, NumberDataType};
+use databend_driver::{Connection, NumberValue, Value};
+
 use std::marker::PhantomData;
 
 pub struct Field {
@@ -14,7 +14,7 @@ pub trait Table {
     fn to_row(self) -> Vec<InsertValue>;
 }
 
-pub async fn create<T: Table>(conn: &Box<dyn Connection>) -> anyhow::Result<()> {
+pub async fn create<T: Table>(conn: &dyn Connection) -> anyhow::Result<()> {
     let fields: Vec<_> = T::schema()
         .iter()
         .map(|field| {
@@ -33,7 +33,7 @@ pub async fn create<T: Table>(conn: &Box<dyn Connection>) -> anyhow::Result<()> 
 pub struct Query(String);
 
 impl Query {
-    pub async fn execute(&self, conn: &Box<dyn Connection>) -> anyhow::Result<()> {
+    pub async fn execute(&self, conn: &dyn Connection) -> anyhow::Result<()> {
         conn.exec(&self.0).await?;
         Ok(())
     }
@@ -41,7 +41,6 @@ impl Query {
 
 pub struct Insert<T> {
     data_type: PhantomData<T>,
-    values: Option<Vec<T>>,
 }
 
 impl<T: Table> Insert<T> {
@@ -75,7 +74,6 @@ impl<T: Table> Insert<T> {
 pub fn insert<T: Table>() -> Insert<T> {
     Insert {
         data_type: PhantomData,
-        values: None,
     }
 }
 

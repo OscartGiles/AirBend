@@ -1,8 +1,12 @@
+mod cli;
 mod client_middleware;
 mod db;
 mod sources;
 
-use airbend_table::{create, insert, Client, Connection}; // Our own crate for DB inserts
+use airbend_table::{create, insert, Client, Connection};
+use clap::Parser;
+use cli::Cli;
+// Our own crate for DB inserts
 use db::laqn::{FlatSensorReading, SiteMeta};
 use jiff::{Timestamp, Unit};
 
@@ -28,16 +32,24 @@ fn site_to_site_meta(value: Site, time: jiff::Timestamp) -> SiteMeta {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let max_concurrent_connections = 5;
-    let client = create_client(max_concurrent_connections)?;
+    let args = Cli::parse();
 
-    let dsn = "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string();
+    // Create an http client
+    let client = create_client(args.max_concurrent_connections)?;
+
+    // Get the database connection string (or use the default)
+    let dsn = if let Some(connection_str) = args.connection_string {
+        connection_str
+    } else {
+        "databend://databend:databend@localhost:8000/default?sslmode=disable".to_string()
+    };
+
     let db_client = Client::new(dsn);
     let conn = db_client.get_conn().await.unwrap();
 
     // Create a Site Metadata table
-    create::<SiteMeta>(&conn).await?;
-    create::<FlatSensorReading>(&conn).await?;
+    create::<SiteMeta>(&*conn).await?;
+    create::<FlatSensorReading>(&*conn).await?;
 
     // Records the scrape time.
     let scrape_time = Timestamp::now().round(Unit::Second)?;
@@ -55,7 +67,7 @@ async fn main() -> anyhow::Result<()> {
         .collect();
 
     // Insert the values into the database
-    insert().values(db_meta).execute(&conn).await?;
+    insert().values(db_meta).execute(&*conn).await?;
 
     // This is a collection that keeps track of async tasks. Each task is a call to an
     // API endpoint + an insert into the database.
@@ -83,7 +95,7 @@ async fn main() -> anyhow::Result<()> {
                 });
             }
 
-            insert().values(insert_rows).execute(&conn).await?;
+            insert().values(insert_rows).execute(&*conn).await?;
         }
         Ok(sensor_site.site_code)
     }
@@ -94,8 +106,8 @@ async fn main() -> anyhow::Result<()> {
             client.clone(),
             conn.clone(),
             sensor_site,
-            "2024-09-01".into(),
-            "2024-09-02".into(),
+            args.start_date.clone(),
+            args.end_date.clone(),
             scrape_time,
         ));
     }

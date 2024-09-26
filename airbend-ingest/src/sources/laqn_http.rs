@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use airbend_table::AirbendTable;
-use reqwest::{redirect, Client};
+use reqwest::redirect;
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use reqwest_tracing::TracingMiddleware;
@@ -25,6 +25,7 @@ where
     Ok(s.filter(|s| !s.is_empty())) // Convert empty strings to None
 }
 
+#[allow(unused)]
 #[derive(Deserialize, Debug, Clone, AirbendTable)]
 #[airbend_table(table_name = "raw_metadata")]
 pub struct Site {
@@ -89,6 +90,7 @@ pub struct AirQualityData {
     pub air_quality_data: AirQuality,
 }
 
+#[allow(unused)]
 #[derive(Deserialize, Debug)]
 pub struct AirQuality {
     #[serde(alias = "@SiteCode")]
@@ -167,7 +169,7 @@ pub async fn get_meta(client: &ClientWithMiddleware) -> reqwest_middleware::Resu
     let resp = client.get(META_URL).send().await?;
     resp.json()
         .await
-        .map_err(|e| reqwest_middleware::Error::Reqwest(e))
+        .map_err(reqwest_middleware::Error::Reqwest)
 }
 
 pub async fn get_raw_laqn_readings(
@@ -190,5 +192,5 @@ pub async fn get_raw_laqn_readings(
     let resp = client.get(url).send().await?;
     resp.json()
         .await
-        .map_err(|e| reqwest_middleware::Error::Reqwest(e))
+        .map_err(reqwest_middleware::Error::Reqwest)
 }

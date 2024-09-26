@@ -3,7 +3,7 @@
 //!
 use http::{Extensions, StatusCode};
 use reqwest::{Request, Response};
-use reqwest_middleware::{ClientWithMiddleware, Middleware, Next};
+use reqwest_middleware::{Middleware, Next};
 use std::{
     fmt::{self},
     sync::Arc,

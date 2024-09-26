@@ -1,6 +1,5 @@
-use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parenthesized, parse::Parser, parse_macro_input, Data, DeriveInput, LitStr, Meta};
+use syn::{parse_macro_input, Data, DeriveInput, LitStr};
 
 #[proc_macro_derive(AirbendTable, attributes(airbend_table, airbend_col))]
 pub fn derive_airbend_table(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
