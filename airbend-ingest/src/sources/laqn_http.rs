@@ -99,14 +99,15 @@ pub struct AirQuality {
     pub readings: Vec<SensorReading>,
 }
 
+/// The API returns everything as strings, inluding sensor readings.
 #[derive(Deserialize, Debug)]
 pub struct SensorReading {
     #[serde(alias = "@MeasurementDateGMT")]
     pub measurement_date: String,
     #[serde(alias = "@SpeciesCode", deserialize_with = "empty_string_as_none")]
     pub species_code: Option<String>,
-    #[serde(alias = "@Value")]
-    pub value: f64,
+    #[serde(alias = "@Value", deserialize_with = "empty_string_as_none")]
+    pub value: Option<String>,
 }
 
 #[derive(AirbendTable)]

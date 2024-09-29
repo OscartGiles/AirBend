@@ -11,8 +11,8 @@ pub struct FlatSensorReading {
     pub measurement_date: String,
     #[airbend_col(dtype = "VARCHAR")]
     pub species_code: Option<String>,
-    #[airbend_col(dtype = "DOUBLE")]
-    pub value: f64,
+    #[airbend_col(dtype = "VARCHAR")]
+    pub value: Option<String>,
 }
 
 #[derive(AirbendTable)]
