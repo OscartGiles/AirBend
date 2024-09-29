@@ -105,23 +105,8 @@ pub struct SensorReading {
     pub measurement_date: String,
     #[serde(alias = "@SpeciesCode", deserialize_with = "empty_string_as_none")]
     pub species_code: Option<String>,
-    #[serde(alias = "@Value", deserialize_with = "empty_string_as_none")]
-    pub value: Option<String>,
-}
-
-#[derive(AirbendTable)]
-#[airbend_table(table_name = "raw_sensor_reading")]
-pub struct FlatSensorReading {
-    #[airbend_col(dtype = "TIMESTAMP")]
-    pub scrape_time: jiff::Timestamp,
-    #[airbend_col(dtype = "VARCHAR")]
-    pub site_code: String,
-    #[airbend_col(dtype = "VARCHAR")]
-    pub measurement_date: String,
-    #[airbend_col(dtype = "VARCHAR")]
-    pub species_code: Option<String>,
-    #[airbend_col(dtype = "VARCHAR")]
-    pub value: Option<String>,
+    #[serde(alias = "@Value")]
+    pub value: f64,
 }
 
 #[derive(AirbendTable)]

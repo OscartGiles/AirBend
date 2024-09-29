@@ -1,0 +1,61 @@
+version: 2
+
+sources:
+  - name: laqn
+    schema: default
+    tables:
+      - name: raw_metadata
+      - name: raw_sensor_reading
+
+models:
+  - name: clean_site_metadata
+    description: "Process the raw site metadata."
+    columns:
+      - name: site_code
+        description: "A unique code for the laqn sensor"
+        data_tests:
+          - unique
+          - not_null
+      - name: site_name
+        description: "The name of the laqn sensor"
+        data_tests:
+          - not_null
+      - name: site_type
+        description: "The type of laqn sensor"
+        data_tests:
+          - not_null
+      - name: site_link
+        description: "URL for laqn sensor information"
+        data_tests:
+          - not_null
+      - name: date_opened
+        description: "The date the laqn sensor opened"
+        data_tests:
+          - not_null
+      - name: date_closed
+        description: "The date the laqn sensor closed"
+        data_tests:
+          - not_null
+      - name: location
+        description: "The geometry point giving the location of the sensor"
+        data_tests:
+          - not_null
+  - name: clean_sensor_readings
+    description: "Cleaned sensor readings"
+    columns:
+      - name: site_code
+        description: "A unique code for the laqn sensor"
+        data_tests:
+          - not_null
+      - name: measurement_time
+        description: "The time of the sensor reading"
+        data_tests:
+          - not_null
+      - name: species_code
+        description: "The species of the pollutant"
+        data_tests:
+          - not_null
+      - name: value
+        description: "The sensor reading"
+        data_tests:
+          - not_null
