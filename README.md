@@ -158,7 +158,6 @@ pub struct FlatSensorReading {
 create::<FlatSensorReading>(&*conn).await?;
 ```
 
-
 ### Install
 Assuming you have a [Rust](https://www.rust-lang.org/tools/install) toolchain installed:
 
@@ -174,4 +173,16 @@ airbend-ingest --help
 and finally get data between a date range and insert into databend:
 ```sh
 airbend-ingest --start-date 2024-09-01 --end-date 2024-10-02 --max-concurrent-connections 10
+```
+
+### Run the dbt pipeline
+
+Once you have ingested some data run the pipeline:
+
+```sh
+cd airbend_pipeline
+```
+
+```sh
+uv run dbt run
 ```
